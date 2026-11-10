@@ -26,7 +26,7 @@ class Jugador extends Thread {
     }
     @Override
     public void run() {
-        while (saldo > 0) {
+        while (saldo >= cantidad) {
             int valor = 0;
             if (tipo == 1) {
                 valor = random.nextInt(36) + 1;
@@ -47,5 +47,6 @@ class Jugador extends Thread {
                 }
             }
         }
+        casino.eliminarJugador();
     }
 }

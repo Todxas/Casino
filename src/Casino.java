@@ -1,14 +1,14 @@
 import java.util.Random;
 
 public class Casino {
-    // MONITOR COMPARTIDO
-    private int banca = 50000;
+    private int banca = 5000;
     private int apuestas = 0;
     private int finalizados = 0;
     private int resultado = -1;
     private int turno = 0;
     private boolean activo = true;
     private final int TOTAL = 12;
+    private int jugadoresActivos = 12;
     private Random random = new Random();
 
     public static void main(String[] args) {
@@ -39,24 +39,22 @@ public class Casino {
                 return false;
             }
         }
-
         if (!activo) return false;
         boolean gana = false;
         int premio = 0;
-
         if (resultado != 0) {
-            if (tipo == 1 && valor == resultado) {
+            if ((tipo == 1 || tipo == 3) && valor == resultado) {
                 gana = true;
                 premio = cantidad * 36;
             }
-            if (tipo == 2 &&
-                    ((valor == 0 && resultado % 2 == 0) ||
-                            (valor == 1 && resultado % 2 != 0))) {
+            if (tipo == 2 && ((valor == 0 && resultado % 2 == 0) || (valor == 1 && resultado % 2 != 0))) {
                 gana = true;
                 premio = cantidad * 2;
             }
         }
-        jugador.setUltimaVictoria(gana);
+        if (tipo == 3) {
+            jugador.setUltimaVictoria(gana);
+        }
         if (gana) {
             if (banca < premio) {
                 activo = false;
@@ -75,19 +73,26 @@ public class Casino {
         System.out.println("Saldo jugador: " + jugador.saldo + " €");
         System.out.println("Saldo banca: " + banca + " €");
         finalizados++;
-        if (finalizados == TOTAL) {
+        if (finalizados == jugadoresActivos) {
             finalizados = 0;
             apuestas = 0;
             resultado = -1;
             turno++;
             notifyAll();
+        } else {
+            while (turno == miTurno && activo) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    return false;
+                }
+            }
         }
-        return true;
+        return activo;
     }
-
     public synchronized boolean girar() {
         int miTurno = turno;
-        while (apuestas < TOTAL && activo) {
+        while (apuestas < jugadoresActivos && activo) {
             try {
                 wait();
             } catch (InterruptedException e) {
@@ -101,8 +106,7 @@ public class Casino {
             return false;
         }
         resultado = random.nextInt(37);
-        System.out.println("\nResultado de la tirada: " +
-                resultado + "\n");
+        System.out.println("\nResultado de la tirada: " + resultado + "\n");
         notifyAll();
         while (turno == miTurno && activo) {
             try {
@@ -112,5 +116,9 @@ public class Casino {
             }
         }
         return activo;
+    }
+    public synchronized void eliminarJugador() {
+        jugadoresActivos--;
+        notifyAll();
     }
 }

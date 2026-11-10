@@ -5,8 +5,10 @@ class Ruleta extends Thread {
     }
     @Override
     public void run() {
+        int contador = 1;
         while (casino.girar()) {
-            System.out.println("Nueva ronda de apuestas.");
+            contador++;
+            System.out.println("\nNueva ronda de apuestas.\nRonda " + contador);
         }
         System.out.println("La simulación ha terminado.");
     }
